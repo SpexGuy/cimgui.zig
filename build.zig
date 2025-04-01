@@ -174,7 +174,7 @@ pub fn build(builder: *std.Build) !void {
         },
     }, .{
         .imgui = .{
-            .name = "ocornut/imgui",
+            .name = "SpexGuy/imgui",
             .host = .github,
             .ref = .tag,
         },
