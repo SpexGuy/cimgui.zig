@@ -745,9 +745,9 @@ struct ImDrawDataBuilder_t
 
 struct ImGuiStyleVarInfo_t
 {
-    ImU32         Count : 8;    // 1+
-    ImGuiDataType DataType : 8;
-    ImU32         Offset : 16;  // Offset in parent structure
+    ImU8  Count;   // 1+
+    ImU8  DataType;
+    ImU16 Offset;  // Offset in parent structure
 };
 CIMGUI_API void* ImGuiStyleVarInfo_GetVarPtr(const ImGuiStyleVarInfo* self, void* parent);
 
@@ -1738,23 +1738,23 @@ struct ImGuiOldColumns_t
 struct ImGuiBoxSelectState_t
 {
     // Active box-selection data (persistent, 1 active at a time)
-    ImGuiID       ID;
-    bool          IsActive;
-    bool          IsStarting;
-    bool          IsStartedFromVoid;  // Starting click was not from an item.
-    bool          IsStartedSetNavIdOnce;
-    bool          RequestClear;
-    ImGuiKeyChord KeyMods : 16;       // Latched key-mods for box-select logic.
-    ImVec2        StartPosRel;        // Start position in window-contents relative space (to support scrolling)
-    ImVec2        EndPosRel;          // End position in window-contents relative space
-    ImVec2        ScrollAccum;        // Scrolling accumulator (to behave at high-frame spaces)
-    ImGuiWindow*  Window;
+    ImGuiID      ID;
+    bool         IsActive;
+    bool         IsStarting;
+    bool         IsStartedFromVoid;  // Starting click was not from an item.
+    bool         IsStartedSetNavIdOnce;
+    bool         RequestClear;
+    ImU16        KeyMods;            // Latched key-mods for box-select logic.
+    ImVec2       StartPosRel;        // Start position in window-contents relative space (to support scrolling)
+    ImVec2       EndPosRel;          // End position in window-contents relative space
+    ImVec2       ScrollAccum;        // Scrolling accumulator (to behave at high-frame spaces)
+    ImGuiWindow* Window;
 
     // Temporary/Transient data
-    bool          UnclipMode;         // (Temp/Transient, here in hot area). Set/cleared by the BeginMultiSelect()/EndMultiSelect() owning active box-select.
-    ImRect        UnclipRect;         // Rectangle where ItemAdd() clipping may be temporarily disabled. Need support by multi-select supporting widgets.
-    ImRect        BoxSelectRectPrev;  // Selection rectangle in absolute coordinates (derived every frame from BoxSelectStartPosRel and MousePos)
-    ImRect        BoxSelectRectCurr;
+    bool         UnclipMode;         // (Temp/Transient, here in hot area). Set/cleared by the BeginMultiSelect()/EndMultiSelect() owning active box-select.
+    ImRect       UnclipRect;         // Rectangle where ItemAdd() clipping may be temporarily disabled. Need support by multi-select supporting widgets.
+    ImRect       BoxSelectRectPrev;  // Selection rectangle in absolute coordinates (derived every frame from BoxSelectStartPosRel and MousePos)
+    ImRect       BoxSelectRectCurr;
 };
 
 //-----------------------------------------------------------------------------
@@ -1979,11 +1979,11 @@ struct ImGuiMetricsConfig_t
 
 struct ImGuiStackLevelInfo_t
 {
-    ImGuiID       ID;
-    ImS8          QueryFrameCount;  // >= 1: Query in progress
-    bool          QuerySuccess;     // Obtained result from DebugHookIdInfo()
-    ImGuiDataType DataType : 8;
-    char          Desc[57];         // Arbitrarily sized buffer to hold a result (FIXME: could replace Results[] with a chunk stream?) FIXME: Now that we added CTRL+C this should be fixed.
+    ImGuiID ID;
+    ImS8    QueryFrameCount;  // >= 1: Query in progress
+    bool    QuerySuccess;     // Obtained result from DebugHookIdInfo()
+    ImU8    DataType;
+    char    Desc[57];         // Arbitrarily sized buffer to hold a result (FIXME: could replace Results[] with a chunk stream?) FIXME: Now that we added CTRL+C this should be fixed.
 };
 
 // State for ID Stack tool queries
@@ -2102,7 +2102,7 @@ struct ImGuiContext_t
     bool                           ActiveIdHasBeenEditedBefore;         // Was the value associated to the widget Edited over the course of the Active state.
     bool                           ActiveIdHasBeenEditedThisFrame;
     bool                           ActiveIdFromShortcut;
-    int                            ActiveIdMouseButton : 8;
+    ImU8                           ActiveIdMouseButton;
     ImVec2                         ActiveIdClickOffset;                 // Clicked offset from upper-left corner, if applicable (currently only set by ButtonBehavior)
     ImGuiWindow*                   ActiveIdWindow;
     ImGuiInputSource               ActiveIdSource;                      // Activating source: ImGuiInputSource_Mouse OR ImGuiInputSource_Keyboard OR ImGuiInputSource_Gamepad
@@ -2509,9 +2509,9 @@ struct ImGuiWindow_t
     ImS8                     HiddenFramesCannotSkipItems;                     // Hide the window for N frames while allowing items to be submitted so we can measure their size
     ImS8                     HiddenFramesForRenderOnly;                       // Hide the window until frame N at Render() time only
     ImS8                     DisableInputsFrames;                             // Disable window interactions for N frames
-    ImGuiCond                SetWindowPosAllowFlags : 8;                      // store acceptable condition flags for SetNextWindowPos() use.
-    ImGuiCond                SetWindowSizeAllowFlags : 8;                     // store acceptable condition flags for SetNextWindowSize() use.
-    ImGuiCond                SetWindowCollapsedAllowFlags : 8;                // store acceptable condition flags for SetNextWindowCollapsed() use.
+    ImU8                     SetWindowPosAllowFlags;                          // store acceptable condition flags for SetNextWindowPos() use.
+    ImU8                     SetWindowSizeAllowFlags;                         // store acceptable condition flags for SetNextWindowSize() use.
+    ImU8                     SetWindowCollapsedAllowFlags;                    // store acceptable condition flags for SetNextWindowCollapsed() use.
     ImVec2                   SetWindowPosVal;                                 // store window position when using a non-zero Pivot (position set needs to be processed when we know the window size)
     ImVec2                   SetWindowPosPivot;                               // store window pivot for positioning. ImVec2(0, 0) when positioning from top-left corner; ImVec2(0.5f, 0.5f) for centering; ImVec2(1, 1) for bottom right.
 
@@ -2665,48 +2665,48 @@ typedef ImU16 ImGuiTableDrawChannelIdx;
 // This is in contrast with some user-facing api such as IsItemVisible() / IsRectVisible() which use "Visible" to mean "not clipped".
 struct ImGuiTableColumn_t
 {
-    ImGuiTableColumnFlags    Flags;                         // Flags after some patching (not directly same as provided by user). See ImGuiTableColumnFlags_
-    float                    WidthGiven;                    // Final/actual width visible == (MaxX - MinX), locked in TableUpdateLayout(). May be > WidthRequest to honor minimum width, may be < WidthRequest to honor shrinking columns down in tight space.
-    float                    MinX;                          // Absolute positions
+    ImGuiTableColumnFlags    Flags;                     // Flags after some patching (not directly same as provided by user). See ImGuiTableColumnFlags_
+    float                    WidthGiven;                // Final/actual width visible == (MaxX - MinX), locked in TableUpdateLayout(). May be > WidthRequest to honor minimum width, may be < WidthRequest to honor shrinking columns down in tight space.
+    float                    MinX;                      // Absolute positions
     float                    MaxX;
-    float                    WidthRequest;                  // Master width absolute value when !(Flags & _WidthStretch). When Stretch this is derived every frame from StretchWeight in TableUpdateLayout()
-    float                    WidthAuto;                     // Automatic width
-    float                    WidthMax;                      // Maximum width (FIXME: overwritten by each instance)
-    float                    StretchWeight;                 // Master width weight when (Flags & _WidthStretch). Often around ~1.0f initially.
-    float                    InitStretchWeightOrWidth;      // Value passed to TableSetupColumn(). For Width it is a content width (_without padding_).
-    ImRect                   ClipRect;                      // Clipping rectangle for the column
-    ImGuiID                  UserID;                        // Optional, value passed to TableSetupColumn()
-    float                    WorkMinX;                      // Contents region min ~(MinX + CellPaddingX + CellSpacingX1) == cursor start position when entering column
-    float                    WorkMaxX;                      // Contents region max ~(MaxX - CellPaddingX - CellSpacingX2)
-    float                    ItemWidth;                     // Current item width for the column, preserved across rows
-    float                    ContentMaxXFrozen;             // Contents maximum position for frozen rows (apart from headers), from which we can infer content width.
+    float                    WidthRequest;              // Master width absolute value when !(Flags & _WidthStretch). When Stretch this is derived every frame from StretchWeight in TableUpdateLayout()
+    float                    WidthAuto;                 // Automatic width
+    float                    WidthMax;                  // Maximum width (FIXME: overwritten by each instance)
+    float                    StretchWeight;             // Master width weight when (Flags & _WidthStretch). Often around ~1.0f initially.
+    float                    InitStretchWeightOrWidth;  // Value passed to TableSetupColumn(). For Width it is a content width (_without padding_).
+    ImRect                   ClipRect;                  // Clipping rectangle for the column
+    ImGuiID                  UserID;                    // Optional, value passed to TableSetupColumn()
+    float                    WorkMinX;                  // Contents region min ~(MinX + CellPaddingX + CellSpacingX1) == cursor start position when entering column
+    float                    WorkMaxX;                  // Contents region max ~(MaxX - CellPaddingX - CellSpacingX2)
+    float                    ItemWidth;                 // Current item width for the column, preserved across rows
+    float                    ContentMaxXFrozen;         // Contents maximum position for frozen rows (apart from headers), from which we can infer content width.
     float                    ContentMaxXUnfrozen;
-    float                    ContentMaxXHeadersUsed;        // Contents maximum position for headers rows (regardless of freezing). TableHeader() automatically softclip itself + report ideal desired size, to avoid creating extraneous draw calls
+    float                    ContentMaxXHeadersUsed;    // Contents maximum position for headers rows (regardless of freezing). TableHeader() automatically softclip itself + report ideal desired size, to avoid creating extraneous draw calls
     float                    ContentMaxXHeadersIdeal;
-    ImS16                    NameOffset;                    // Offset into parent ColumnsNames[]
-    ImGuiTableColumnIdx      DisplayOrder;                  // Index within Table's IndexToDisplayOrder[] (column may be reordered by users)
-    ImGuiTableColumnIdx      IndexWithinEnabledSet;         // Index within enabled/visible set (<= IndexToDisplayOrder)
-    ImGuiTableColumnIdx      PrevEnabledColumn;             // Index of prev enabled/visible column within Columns[], -1 if first enabled/visible column
-    ImGuiTableColumnIdx      NextEnabledColumn;             // Index of next enabled/visible column within Columns[], -1 if last enabled/visible column
-    ImGuiTableColumnIdx      SortOrder;                     // Index of this column within sort specs, -1 if not sorting on this column, 0 for single-sort, may be >0 on multi-sort
-    ImGuiTableDrawChannelIdx DrawChannelCurrent;            // Index within DrawSplitter.Channels[]
-    ImGuiTableDrawChannelIdx DrawChannelFrozen;             // Draw channels for frozen rows (often headers)
-    ImGuiTableDrawChannelIdx DrawChannelUnfrozen;           // Draw channels for unfrozen rows
-    bool                     IsEnabled;                     // IsUserEnabled && (Flags & ImGuiTableColumnFlags_Disabled) == 0
-    bool                     IsUserEnabled;                 // Is the column not marked Hidden by the user? (unrelated to being off view, e.g. clipped by scrolling).
+    ImS16                    NameOffset;                // Offset into parent ColumnsNames[]
+    ImGuiTableColumnIdx      DisplayOrder;              // Index within Table's IndexToDisplayOrder[] (column may be reordered by users)
+    ImGuiTableColumnIdx      IndexWithinEnabledSet;     // Index within enabled/visible set (<= IndexToDisplayOrder)
+    ImGuiTableColumnIdx      PrevEnabledColumn;         // Index of prev enabled/visible column within Columns[], -1 if first enabled/visible column
+    ImGuiTableColumnIdx      NextEnabledColumn;         // Index of next enabled/visible column within Columns[], -1 if last enabled/visible column
+    ImGuiTableColumnIdx      SortOrder;                 // Index of this column within sort specs, -1 if not sorting on this column, 0 for single-sort, may be >0 on multi-sort
+    ImGuiTableDrawChannelIdx DrawChannelCurrent;        // Index within DrawSplitter.Channels[]
+    ImGuiTableDrawChannelIdx DrawChannelFrozen;         // Draw channels for frozen rows (often headers)
+    ImGuiTableDrawChannelIdx DrawChannelUnfrozen;       // Draw channels for unfrozen rows
+    bool                     IsEnabled;                 // IsUserEnabled && (Flags & ImGuiTableColumnFlags_Disabled) == 0
+    bool                     IsUserEnabled;             // Is the column not marked Hidden by the user? (unrelated to being off view, e.g. clipped by scrolling).
     bool                     IsUserEnabledNextFrame;
-    bool                     IsVisibleX;                    // Is actually in view (e.g. overlapping the host window clipping rectangle, not scrolled).
+    bool                     IsVisibleX;                // Is actually in view (e.g. overlapping the host window clipping rectangle, not scrolled).
     bool                     IsVisibleY;
-    bool                     IsRequestOutput;               // Return value for TableSetColumnIndex() / TableNextColumn(): whether we request user to output contents or not.
-    bool                     IsSkipItems;                   // Do we want item submissions to this column to be completely ignored (no layout will happen).
+    bool                     IsRequestOutput;           // Return value for TableSetColumnIndex() / TableNextColumn(): whether we request user to output contents or not.
+    bool                     IsSkipItems;               // Do we want item submissions to this column to be completely ignored (no layout will happen).
     bool                     IsPreserveWidthAuto;
-    ImS8                     NavLayerCurrent;               // ImGuiNavLayer in 1 byte
-    ImU8                     AutoFitQueue;                  // Queue of 8 values for the next 8 frames to request auto-fit
-    ImU8                     CannotSkipItemsQueue;          // Queue of 8 values for the next 8 frames to disable Clipped/SkipItem
-    ImU8                     SortDirection : 2;             // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending
-    ImU8                     SortDirectionsAvailCount : 2;  // Number of available sort directions (0 to 3)
-    ImU8                     SortDirectionsAvailMask : 4;   // Mask of available sort directions (1-bit each)
-    ImU8                     SortDirectionsAvailList;       // Ordered list of available sort directions (2-bits each, total 8-bits)
+    ImS8                     NavLayerCurrent;           // ImGuiNavLayer in 1 byte
+    ImU8                     AutoFitQueue;              // Queue of 8 values for the next 8 frames to request auto-fit
+    ImU8                     CannotSkipItemsQueue;      // Queue of 8 values for the next 8 frames to disable Clipped/SkipItem
+    ImU8                     SortDirection;             // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending
+    ImU8                     SortDirectionsAvailCount;  // Number of available sort directions (0 to 3)
+    ImU8                     SortDirectionsAvailMask;   // Mask of available sort directions (1-bit each)
+    ImU8                     SortDirectionsAvailList;   // Ordered list of available sort directions (2-bits each, total 8-bits)
 };
 
 // Transient cell data stored per row.
@@ -2767,8 +2767,8 @@ struct ImGuiTable_t
     float                      RowCellPaddingY;            // Top and bottom padding. Reloaded during row change.
     float                      RowTextBaseline;
     float                      RowIndentOffsetX;
-    ImGuiTableRowFlags         RowFlags : 16;              // Current row flags, see ImGuiTableRowFlags_
-    ImGuiTableRowFlags         LastRowFlags : 16;
+    ImU16                      RowFlags;                   // Current row flags, see ImGuiTableRowFlags_
+    ImU16                      LastRowFlags;
     int                        RowBgColorCounter;          // Counter for alternating background colors (can be fast-forwarded by e.g clipper), not same as CurrentRow because header rows typically don't increase this.
     ImU32                      RowBgColor[2];              // Background color override for current row.
     ImU32                      BorderColorStrong;
@@ -2891,9 +2891,9 @@ struct ImGuiTableColumnSettings_t
     ImGuiTableColumnIdx Index;
     ImGuiTableColumnIdx DisplayOrder;
     ImGuiTableColumnIdx SortOrder;
-    ImU8                SortDirection : 2;
-    ImS8                IsEnabled : 2;  // "Visible" in ini file
-    ImU8                IsStretch : 1;
+    ImU8                SortDirection;
+    ImS8                IsEnabled;  // "Visible" in ini file
+    ImU8                IsStretch;
 };
 
 // This is designed to be stored in a single ImChunkStream (1 header followed by N ImGuiTableColumnSettings, etc.)
