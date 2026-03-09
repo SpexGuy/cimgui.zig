@@ -820,9 +820,13 @@ struct ImVector_ImFontStackData_t { int Size; int Capacity; ImFontStackData* Dat
 
 struct ImGuiStyleVarInfo_t
 {
+#ifdef ZIG_TRANSLATE_C
+    ImU32         _Bitfield;
+#else
     ImU32         Count : 8;    // 1+
     ImGuiDataType DataType : 8;
     ImU32         Offset : 16;  // Offset in parent structure
+#endif
 };
 CIMGUI_API void* ImGuiStyleVarInfo_GetVarPtr(const ImGuiStyleVarInfo* self, void* parent);
 
@@ -1843,7 +1847,16 @@ struct ImGuiBoxSelectState_t
     bool          IsStartedFromVoid;  // Starting click was not from an item.
     bool          IsStartedSetNavIdOnce;
     bool          RequestClear;
+#ifdef ZIG_TRANSLATE_C
+    // This one is tricky. On Itanium ABI,
+    // KeyMods lives in the padding between
+    // RequestClear and StartPosRel.
+    // On MSVC, it would get its own 32-bit word.
+    // We are going to assume that the compilation
+    // unit was made with `zig cc`, which uses itanium rules.
+#else
     ImGuiKeyChord KeyMods : 16;       // Latched key-mods for box-select logic.
+#endif
     ImVec2        StartPosRel;        // Start position in window-contents relative space (to support scrolling)
     ImVec2        EndPosRel;          // End position in window-contents relative space
     ImVec2        ScrollAccum;        // Scrolling accumulator (to behave at high-frame spaces)
@@ -2649,10 +2662,14 @@ struct ImGuiWindow_t
     ImS8                     HiddenFramesCannotSkipItems;                     // Hide the window for N frames while allowing items to be submitted so we can measure their size
     ImS8                     HiddenFramesForRenderOnly;                       // Hide the window until frame N at Render() time only
     ImS8                     DisableInputsFrames;                             // Disable window interactions for N frames
+#ifdef ZIG_TRANSLATE_C
+    int                      _Bitfield;
+#else
     ImGuiWindowBgClickFlags  BgClickFlags : 8;                                // Configure behavior of click+dragging on window bg/void or over items. Default sets by io.ConfigWindowsMoveFromTitleBarOnly. If you use this please report in #3379.
     ImGuiCond                SetWindowPosAllowFlags : 8;                      // store acceptable condition flags for SetNextWindowPos() use.
     ImGuiCond                SetWindowSizeAllowFlags : 8;                     // store acceptable condition flags for SetNextWindowSize() use.
     ImGuiCond                SetWindowCollapsedAllowFlags : 8;                // store acceptable condition flags for SetNextWindowCollapsed() use.
+#endif
     ImVec2                   SetWindowPosVal;                                 // store window position when using a non-zero Pivot (position set needs to be processed when we know the window size)
     ImVec2                   SetWindowPosPivot;                               // store window pivot for positioning. ImVec2(0, 0) when positioning from top-left corner; ImVec2(0.5f, 0.5f) for centering; ImVec2(1, 1) for bottom right.
 
@@ -2846,9 +2863,13 @@ struct ImGuiTableColumn_t
     ImS8                     NavLayerCurrent;               // ImGuiNavLayer in 1 byte
     ImU8                     AutoFitQueue;                  // Queue of 8 values for the next 8 frames to request auto-fit
     ImU8                     CannotSkipItemsQueue;          // Queue of 8 values for the next 8 frames to disable Clipped/SkipItem
+#ifdef ZIG_TRANSLATE_C
+    ImU8                     _Bitfield_SortDirectionInfo;
+#else
     ImU8                     SortDirection : 2;             // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending
     ImU8                     SortDirectionsAvailCount : 2;  // Number of available sort directions (0 to 3)
     ImU8                     SortDirectionsAvailMask : 4;   // Mask of available sort directions (1-bit each)
+#endif
     ImU8                     SortDirectionsAvailList;       // Ordered list of available sort directions (2-bits each, total 8-bits)
 };
 
@@ -2910,8 +2931,12 @@ struct ImGuiTable_t
     float                      RowCellPaddingY;            // Top and bottom padding. Reloaded during row change.
     float                      RowTextBaseline;
     float                      RowIndentOffsetX;
+#ifdef ZIG_TRANSLATE_C
+    int                        _Bitfield_RowFlags;
+#else
     ImGuiTableRowFlags         RowFlags : 16;              // Current row flags, see ImGuiTableRowFlags_
     ImGuiTableRowFlags         LastRowFlags : 16;
+#endif
     int                        RowBgColorCounter;          // Counter for alternating background colors (can be fast-forwarded by e.g clipper), not same as CurrentRow because header rows typically don't increase this.
     ImU32                      RowBgColor[2];              // Background color override for current row.
     ImU32                      BorderColorStrong;
@@ -3035,9 +3060,13 @@ struct ImGuiTableColumnSettings_t
     ImGuiTableColumnIdx Index;
     ImGuiTableColumnIdx DisplayOrder;
     ImGuiTableColumnIdx SortOrder;
+#ifdef ZIG_TRANSLATE_C
+    ImU8                _Bitfield;
+#else
     ImU8                SortDirection : 2;
     ImS8                IsEnabled : 2;  // "Visible" in ini file
     ImU8                IsStretch : 1;
+#endif
 };
 
 // This is designed to be stored in a single ImChunkStream (1 header followed by N ImGuiTableColumnSettings, etc.)
@@ -3730,9 +3759,13 @@ CIMGUI_API ImFontAtlasRectId cImFontAtlasRectId_Make(int index_idx, int gen_idx)
 // Having this also makes it easier to e.g. sort rectangles during repack.
 struct ImFontAtlasRectEntry_t
 {
+#ifdef ZIG_TRANSLATE_C
+    unsigned int _Bitfield;
+#else
     int          TargetIndex : 20;  // When Used: ImFontAtlasRectId -> into Rects[]. When unused: index to next unused RectsIndex[] slot to consume free-list.
     unsigned int Generation : 10;   // Increased each time the entry is reused for a new rectangle.
     unsigned int IsUsed : 1;
+#endif
 };
 struct ImVector_ImFontAtlasRectEntry_t { int Size; int Capacity; ImFontAtlasRectEntry* Data; };  // Instantiation of ImVector<ImFontAtlasRectEntry>
 

@@ -3560,10 +3560,14 @@ struct ImFontConfig_t
 // (Note: some language parsers may fail to convert the bitfield members, in this case maybe drop store a single u32 or we can rework this)
 struct ImFontGlyph_t
 {
+#ifdef ZIG_TRANSLATE_C
+    unsigned int _Bitfield;
+#else
     unsigned int Colored : 1;     // Flag to indicate glyph is colored and should generally ignore tinting (make it usable with no shift on little-endian as this is used in loops)
     unsigned int Visible : 1;     // Flag to indicate glyph has no visible pixels (e.g. space). Allow early out when rendering.
     unsigned int SourceIdx : 4;   // Index of source in parent font
     unsigned int Codepoint : 26;  // 0x0000..0x10FFFF
+#endif
     float        AdvanceX;        // Horizontal distance to advance cursor/layout position.
     float        X0, Y0, X1, Y1;  // Glyph corners. Offsets from current cursor/layout position.
     float        U0, V0, U1, V1;  // Texture coordinates for the current value of ImFontAtlas->TexRef. Cached equivalent of calling GetCustomRect() with PackId.
@@ -3792,10 +3796,14 @@ struct ImFontBaked_t
 
     // [Internal] Members: Cold
     float                Ascent, Descent;           // 4+4   // out // Ascent: distance from top to bottom of e.g. 'A' [0..FontSize] (unscaled)
+#ifdef ZIG_TRANSLATE_C
+    unsigned int         _Bitfield;
+#else
     unsigned int         MetricsTotalSurface : 26;  // 3  // out // Total surface in pixels to get an idea of the font rasterization/texture cost (not exact, we approximate the cost of padding between glyphs)
     unsigned int         WantDestroy : 1;           // 0  //     // Queued for destroy
     unsigned int         LoadNoFallback : 1;        // 0  //     // Disable loading fallback in lower-level calls.
     unsigned int         LoadNoRenderOnLayout : 1;  // 0  //     // Enable a two-steps mode where CalcTextSize() calls will load AdvanceX *without* rendering/packing glyphs. Only advantageous if you know that the glyph is unlikely to actually be rendered, otherwise it is slower because we'd do one query on the first CalcTextSize and one query on the first Draw.
+#endif
     int                  LastUsedFrame;             // 4  //     // Record of that time this was bounds
     ImGuiID              BakedId;                   // 4     //     // Unique ID for this baked storage
     ImFont*              OwnerFont;                 // 4-8   // in  // Parent font
